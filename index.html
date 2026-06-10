@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#11385f">
+<title>Wine Facts · Everything Wine Staff Tool</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Wine+Facts%22%2C%22short_name%22%3A%22Wine%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23EFE7D8%22%2C%22theme_color%22%3A%22%2311385f%22%7D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Marcellus&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF7EF;--page:#EFE7D8;--ink:#2A2320;--ink-soft:#7A6F64;--ink-faint:#B6A998;
+    --line:#E6DCCB;--line-strong:#D8CCB6;--wine:#11385f;--wine-dark:#0b2a47;--wine-tint:#E0EAF3;
+    --gold:#C49A4A;--gold-light:#FBF3E2;--sans:'Hanken Grotesk',system-ui,sans-serif;--serif:'Marcellus',Georgia,serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:var(--sans);
+    background:radial-gradient(120% 80% at 50% -10%,#F6EFE2 0%,var(--page) 60%) fixed;
+    color:var(--ink);min-height:100vh;display:flex;justify-content:center;
+    padding:32px 16px 40px;-webkit-font-smoothing:antialiased;
+  }
+  .screen{
+    background:var(--paper);border-radius:18px;border:1px solid var(--line-strong);
+    box-shadow:0 1px 0 rgba(255,255,255,0.6) inset,0 18px 50px -24px rgba(60,30,20,0.45);
+    overflow:hidden;width:100%;max-width:452px;align-self:flex-start;
+  }
+  .masthead{padding:22px 22px 18px;border-bottom:1px solid var(--line);position:relative;}
+  .masthead::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;
+    background:linear-gradient(90deg,var(--wine) 0%,var(--wine) 60%,var(--gold) 60%,var(--gold) 100%);opacity:0.9;}
+  .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .brand-mark{width:30px;height:30px;border-radius:50%;background:var(--wine);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .brand-mark span{font-family:var(--serif);color:#F6E3C8;font-size:15px;line-height:1;}
+  .brand-over{font-size:10.5px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--wine);}
+  .brand-sub{font-size:11px;color:var(--ink-soft);letter-spacing:0.04em;margin-top:1px;}
+  .masthead h1{font-family:var(--serif);font-weight:400;font-size:28px;line-height:1.05;color:var(--wine);letter-spacing:0.01em;}
+  .masthead .tagline{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
+  .filter-wrap{padding:14px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#FFFDF8,#FBF6ED);}
+  .filter-label{font-size:10.5px;font-weight:700;color:var(--ink-faint);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px;}
+  .filters{display:flex;flex-wrap:wrap;gap:7px;}
+  .filter-btn{font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;border:1px solid var(--line-strong);background:#fff;color:var(--ink-soft);font-family:var(--sans);transition:background .12s,color .12s,border-color .12s;-webkit-tap-highlight-color:transparent;}
+  .filter-btn:hover{border-color:var(--wine);color:var(--wine);}
+  .filter-btn.active{background:var(--wine);color:#FBF3E6;border-color:var(--wine);}
+  .cards{padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .card.hidden{display:none;}
+  .card-header{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);}
+  .card-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .dot-red{background:#8B1A1A;}
+  .dot-white{background:#D4B84A;border:1px solid var(--line-strong);}
+  .dot-rose{background:#D4788A;}
+  .dot-sparkling{background:#A8C4D4;}
+  .dot-fortified{background:#7B4F2E;}
+  .dot-region{background:#3A6B3A;}
+  .card-title{font-family:var(--serif);font-size:16px;font-weight:400;color:var(--wine);flex:1;}
+  .card-tag{font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--ink-soft);background:var(--page);flex-shrink:0;}
+  .card-body{padding:13px 16px;display:flex;flex-direction:column;gap:10px;}
+  .row{display:flex;gap:8px;align-items:flex-start;}
+  .row-label{font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);min-width:72px;padding-top:1px;flex-shrink:0;}
+  .row-val{font-size:13px;color:var(--ink);line-height:1.5;flex:1;}
+  .row-val strong{font-weight:600;color:var(--wine);}
+  .divider{height:1px;background:var(--line);margin:2px 0;}
+  .grapes-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;}
+  .grape-pill{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:99px;border:1px solid var(--wine);background:var(--wine-tint);color:var(--wine);cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;}
+  .grape-pill:hover{background:var(--wine);color:#FBF3E6;}
+  .grape-pill:active{transform:scale(0.96);}
+  .pairing-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;}
+  .pairing-pill{font-size:11.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--gold-light);background:var(--gold-light);color:#7a5a1a;font-weight:500;}
+  .grape-drawer{display:none;margin-top:8px;background:#FDFAF4;border:1px solid var(--gold);border-radius:12px;overflow:hidden;}
+  .grape-drawer.open{display:block;}
+  .drawer-header{background:var(--wine);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;}
+  .drawer-title{font-family:var(--serif);font-size:15px;color:#F0E8D8;}
+  .drawer-close{background:none;border:none;color:#c8a96e;font-size:20px;line-height:1;cursor:pointer;padding:0 2px;font-family:var(--sans);}
+  .drawer-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+  .d-row{display:flex;gap:8px;align-items:flex-start;}
+  .d-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);min-width:64px;padding-top:1px;flex-shrink:0;}
+  .d-val{font-size:12.5px;color:var(--ink);line-height:1.5;flex:1;}
+  .d-val strong{font-weight:600;color:var(--wine);}
+  .d-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+  .d-pill{font-size:11px;padding:3px 9px;border-radius:99px;background:var(--gold-light);border:1px solid #e8d49a;color:#7a5a1a;font-weight:500;}
+  .d-divider{height:1px;background:var(--line);}
+  footer{border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;}
+  footer span{font-size:11px;color:var(--ink-faint);}
+  footer a{font-size:11px;font-weight:600;color:var(--ink-soft);text-decoration:none;}
+  footer a:hover{color:var(--wine);}
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="masthead">
+    <div class="brand-row">
+      <div class="brand-mark"><span>EW</span></div>
+      <div>
+        <div class="brand-over">Everything Wine</div>
+        <div class="brand-sub">River District Vancouver</div>
+      </div>
+    </div>
+    <h1>Wine Facts</h1>
+    <p class="tagline">WSET Level 1 reference — tap any grape for details.</p>
+  </div>
+
+  <div class="filter-wrap">
+    <div class="filter-label">Filter by</div>
+    <div class="filters">
+      <button class="filter-btn active" onclick="filter('all')">All</button>
+      <button class="filter-btn" onclick="filter('red')">Red</button>
+      <button class="filter-btn" onclick="filter('white')">White</button>
+      <button class="filter-btn" onclick="filter('rose')">Rosé</button>
+      <button class="filter-btn" onclick="filter('sparkling')">Sparkling</button>
+      <button class="filter-btn" onclick="filter('fortified')">Fortified</button>
+      <button class="filter-btn" onclick="filter('region')">By Region</button>
+    </div>
+  </div>
+
+  <div class="cards" id="cardList">
+
+    <!-- LIGHT RED -->
+    <div class="card" data-cat="red">
+      <div class="card-header"><span class="card-dot dot-red"></span><span class="card-title">Light-bodied Red</span><span class="card-tag">Red</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Grapes</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('pinot-noir',this)">Pinot Noir</span>
+            <span class="grape-pill" onclick="openDrawer('gamay',this)">Gamay</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-pinot-noir">
+          <div class="drawer-header"><span class="drawer-title">Pinot Noir</span><button class="drawer-close" onclick="closeDrawer('pinot-noir')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Light body, high acidity, low tannin</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Cherry, raspberry, strawberry, violet, forest floor, earthy mushroom</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Burgundy</strong> (FR) — benchmark. <strong>Willamette Valley</strong> (OR). <strong>Central Otago</strong> (NZ). <strong>Sonoma</strong> (CA).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">12–16°C · Burgundy glass (wide bowl)</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Salmon</span><span class="d-pill">Duck</span><span class="d-pill">Mushroom risotto</span><span class="d-pill">Brie</span><span class="d-pill">Charcuterie</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-gamay">
+          <div class="drawer-header"><span class="drawer-title">Gamay</span><button class="drawer-close" onclick="closeDrawer('gamay')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Very light body, bright acidity, low tannin. Juicy and fresh.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Red cherry, raspberry, banana (Nouveau), violet, candied fruit</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Beaujolais</strong> (FR) — cru villages: Fleurie, Morgon, Moulin-à-Vent. Also BC, Switzerland.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">12–14°C · Can be lightly chilled</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Charcuterie</span><span class="d-pill">Grilled chicken</span><span class="d-pill">Goat cheese</span><span class="d-pill">Light pasta</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val">Low tannin, high acidity. Red fruit — cherry, raspberry, strawberry. Earthy notes.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Burgundy</strong> (FR), <strong>Beaujolais</strong> (FR), <strong>Oregon</strong> (US), <strong>NZ</strong></span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">12–16°C · Red wine glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Salmon</span><span class="pairing-pill">Duck</span><span class="pairing-pill">Mushroom dishes</span><span class="pairing-pill">Charcuterie</span></div></div>
+      </div>
+    </div>
+
+    <!-- MEDIUM RED -->
+    <div class="card" data-cat="red">
+      <div class="card-header"><span class="card-dot dot-red"></span><span class="card-title">Medium-bodied Red</span><span class="card-tag">Red</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Grapes</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('merlot',this)">Merlot</span>
+            <span class="grape-pill" onclick="openDrawer('cab-franc',this)">Cab Franc</span>
+            <span class="grape-pill" onclick="openDrawer('sangiovese',this)">Sangiovese</span>
+            <span class="grape-pill" onclick="openDrawer('tempranillo',this)">Tempranillo</span>
+            <span class="grape-pill" onclick="openDrawer('grenache',this)">Grenache</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-merlot">
+          <div class="drawer-header"><span class="drawer-title">Merlot</span><button class="drawer-close" onclick="closeDrawer('merlot')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Medium body, soft tannins, medium acidity. Approachable and plummy.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Plum, black cherry, chocolate, bay leaf, mocha. Oak adds cedar, vanilla.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Pomerol & St-Émilion</strong> (FR). <strong>Washington State</strong> (US). <strong>Tuscany</strong> in blends.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">16–18°C · Standard red wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Roast lamb</span><span class="d-pill">Beef stew</span><span class="d-pill">Pasta bolognese</span><span class="d-pill">Cheddar</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-cab-franc">
+          <div class="drawer-header"><span class="drawer-title">Cabernet Franc</span><button class="drawer-close" onclick="closeDrawer('cab-franc')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Medium body, medium tannin, herbaceous. Parent grape of Cab Sauv and Merlot.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Red cherry, raspberry, violet, green bell pepper, graphite, tobacco, sometimes smoky.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Loire Valley</strong> (FR) — Chinon, Bourgueil. <strong>Bordeaux</strong> blends. <strong>Okanagan BC</strong> — a local strength.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">15–17°C · Standard red wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Duck confit</span><span class="d-pill">Herb-crusted lamb</span><span class="d-pill">Mushroom dishes</span><span class="d-pill">Goat cheese</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-sangiovese">
+          <div class="drawer-header"><span class="drawer-title">Sangiovese</span><button class="drawer-close" onclick="closeDrawer('sangiovese')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Medium-high tannin, high acidity. Italy's most planted red grape.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Sour cherry, tomato, dried herbs, leather, tobacco, earthy minerality.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Chianti</strong> (IT), <strong>Brunello di Montalcino</strong> (IT — 100% Sangiovese), <strong>Vino Nobile</strong> (IT).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">16–18°C · Large red wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Pizza</span><span class="d-pill">Pasta with tomato</span><span class="d-pill">Bistecca</span><span class="d-pill">Pecorino</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-tempranillo">
+          <div class="drawer-header"><span class="drawer-title">Tempranillo</span><button class="drawer-close" onclick="closeDrawer('tempranillo')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Medium body, medium tannin, low-medium acidity. Spain's flagship red grape.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Strawberry, cherry, leather, tobacco, vanilla (oak), dill. Earthy with age.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Rioja</strong> (ES) — Crianza/Reserva/Gran Reserva. <strong>Ribera del Duero</strong> (ES).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">16–18°C · Standard red wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Roast lamb</span><span class="d-pill">Grilled chorizo</span><span class="d-pill">Manchego</span><span class="d-pill">Tapas</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-grenache">
+          <div class="drawer-header"><span class="drawer-title">Grenache</span><button class="drawer-close" onclick="closeDrawer('grenache')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Medium-full body, low tannin, low acidity, high alcohol. Often blended (GSM).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Raspberry, strawberry, red plum, white pepper, herbes de Provence, kirsch.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>S. Rhône</strong> (FR) — Châteauneuf-du-Pape. <strong>Priorat</strong> (ES). <strong>Sardinia</strong> (IT). Rosé in Provence.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">16–18°C · Large red wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Lamb</span><span class="d-pill">Provençal stews</span><span class="d-pill">Roast chicken</span><span class="d-pill">Olive tapenade</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val">Moderate tannin & acidity. Plum, red cherry, dried herbs, sometimes earthy or spicy.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Bordeaux</strong> (FR), <strong>Tuscany</strong> (IT), <strong>Rioja</strong> (ES), <strong>Rhône</strong> (FR)</span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">16–18°C · Red wine glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Pasta</span><span class="pairing-pill">Pizza</span><span class="pairing-pill">Lamb</span><span class="pairing-pill">Hard cheese</span></div></div>
+      </div>
+    </div>
+
+    <!-- FULL RED -->
+    <div class="card" data-cat="red">
+      <div class="card-header"><span class="card-dot dot-red"></span><span class="card-title">Full-bodied Red</span><span class="card-tag">Red</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Grapes</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('cab-sauv',this)">Cabernet Sauvignon</span>
+            <span class="grape-pill" onclick="openDrawer('syrah',this)">Syrah / Shiraz</span>
+            <span class="grape-pill" onclick="openDrawer('malbec',this)">Malbec</span>
+            <span class="grape-pill" onclick="openDrawer('nebbiolo',this)">Nebbiolo</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-cab-sauv">
+          <div class="drawer-header"><span class="drawer-title">Cabernet Sauvignon</span><button class="drawer-close" onclick="closeDrawer('cab-sauv')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Full body, high tannin, high acidity. World's most widely planted red grape.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Blackcurrant, blackberry, cedar, cigar box, green pepper (cool climate), vanilla & oak spice.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Napa Valley</strong> (US), <strong>Bordeaux Left Bank</strong> (FR), <strong>Coonawarra</strong> (AU), <strong>Maipo Valley</strong> (CL).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">17–19°C · Large Bordeaux glass. Decant young vintages.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Ribeye steak</span><span class="d-pill">Lamb rack</span><span class="d-pill">Aged cheddar</span><span class="d-pill">Dark chocolate</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-syrah">
+          <div class="drawer-header"><span class="drawer-title">Syrah / Shiraz</span><button class="drawer-close" onclick="closeDrawer('syrah')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Full body, high tannin. <strong>Syrah</strong> = Old World (elegant). <strong>Shiraz</strong> = New World (bold, jammy).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Blackberry, black olive, bacon, cracked black pepper, smoked meat, violet.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>N. Rhône</strong> (FR) — Hermitage, Côte-Rôtie. <strong>Barossa Valley</strong> (AU). <strong>Swartland</strong> (SA).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">17–19°C · Large red wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">BBQ ribs</span><span class="d-pill">Venison</span><span class="d-pill">Spiced lamb</span><span class="d-pill">Hard cheese</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-malbec">
+          <div class="drawer-header"><span class="drawer-title">Malbec</span><button class="drawer-close" onclick="closeDrawer('malbec')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Full body, medium-high tannin. Originated in France, made famous by Argentina.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Dark plum, blackberry, violet, cocoa, tobacco, leather. High altitude = more floral lift.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Mendoza</strong> (AR) — Luján de Cuyo & Uco Valley. <strong>Cahors</strong> (FR) — leaner, more tannic.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">17–18°C · Large red wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Argentine asado</span><span class="d-pill">Grilled steak</span><span class="d-pill">Beef empanadas</span><span class="d-pill">Blue cheese</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-nebbiolo">
+          <div class="drawer-header"><span class="drawer-title">Nebbiolo</span><button class="drawer-close" onclick="closeDrawer('nebbiolo')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Full body, very high tannin & acidity. Pale colour despite power. Needs age.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Rose, tar, cherry, dried violet, leather, truffle, tobacco. Iconic "tar and roses."</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Barolo</strong> (IT) — "King of wines." <strong>Barbaresco</strong> (IT) — more approachable. Both in Piedmont.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">18–20°C · Large Burgundy glass. Always decant.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Braised beef</span><span class="d-pill">White truffle pasta</span><span class="d-pill">Aged Parmigiano</span><span class="d-pill">Osso buco</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val">High tannin & body. Blackcurrant, blackberry, dark plum, pepper, oak spice.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Napa Valley</strong> (US), <strong>Barossa</strong> (AU), <strong>Mendoza</strong> (AR), <strong>Bordeaux</strong> (FR), <strong>Barolo</strong> (IT)</span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">17–19°C · Large Bordeaux glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Steak</span><span class="pairing-pill">Beef ribs</span><span class="pairing-pill">Aged cheddar</span><span class="pairing-pill">Dark chocolate</span></div></div>
+      </div>
+    </div>
+
+    <!-- LIGHT WHITE -->
+    <div class="card" data-cat="white">
+      <div class="card-header"><span class="card-dot dot-white"></span><span class="card-title">Light & Crisp White</span><span class="card-tag">White</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Grapes</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('sauv-blanc',this)">Sauvignon Blanc</span>
+            <span class="grape-pill" onclick="openDrawer('pinot-grigio',this)">Pinot Grigio</span>
+            <span class="grape-pill" onclick="openDrawer('albarino',this)">Albariño</span>
+            <span class="grape-pill" onclick="openDrawer('riesling-dry',this)">Riesling (dry)</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-sauv-blanc">
+          <div class="drawer-header"><span class="drawer-title">Sauvignon Blanc</span><button class="drawer-close" onclick="closeDrawer('sauv-blanc')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Light body, high acidity, dry. Very aromatic. Unoaked.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Grapefruit, lime, green apple, cut grass, jalapeño, gooseberry, passion fruit (NZ).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Marlborough</strong> (NZ) — benchmark. <strong>Sancerre & Pouilly-Fumé</strong> (FR Loire). <strong>Bordeaux</strong> in blends.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">7–10°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Oysters</span><span class="d-pill">Goat cheese</span><span class="d-pill">Asparagus</span><span class="d-pill">Sushi</span><span class="d-pill">Green salads</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-pinot-grigio">
+          <div class="drawer-header"><span class="drawer-title">Pinot Grigio / Pinot Gris</span><button class="drawer-close" onclick="closeDrawer('pinot-grigio')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val"><strong>Pinot Grigio</strong> (IT) = light, crisp, neutral. <strong>Pinot Gris</strong> (Alsace) = fuller, richer, spicier. Same grape.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Lemon, green apple, pear, white peach, almond. Alsace adds honey, ginger, spice.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Veneto & Alto Adige</strong> (IT), <strong>Alsace</strong> (FR), <strong>Oregon</strong> (US), <strong>Okanagan BC</strong>.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">8–10°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Seafood</span><span class="d-pill">Light pasta</span><span class="d-pill">Sushi</span><span class="d-pill">Mild cheese</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-albarino">
+          <div class="drawer-header"><span class="drawer-title">Albariño</span><button class="drawer-close" onclick="closeDrawer('albarino')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Light-medium body, high acidity, aromatic, dry. Spain's most celebrated white grape.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Peach, apricot, lemon zest, white flowers, saline minerality. Crisp and refreshing.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Rías Baixas</strong> (ES — Galicia). Also <strong>Vinho Verde</strong> (PT) as Alvarinho.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">8–10°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Grilled fish</span><span class="d-pill">Shellfish</span><span class="d-pill">Ceviche</span><span class="d-pill">Tapas</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-riesling-dry">
+          <div class="drawer-header"><span class="drawer-title">Riesling</span><button class="drawer-close" onclick="closeDrawer('riesling-dry')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Light body, very high acidity. Ranges from bone dry to lusciously sweet. Very age-worthy.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Lime, lemon, green apple, slate, petrol (with age), apricot, honey (sweet styles).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Mosel & Rhine</strong> (DE), <strong>Alsace</strong> (FR), <strong>Clare & Eden Valley</strong> (AU), <strong>Okanagan BC</strong>.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">7–10°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Spicy Thai</span><span class="d-pill">Pork belly</span><span class="d-pill">Sushi</span><span class="d-pill">Smoked salmon</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val">High acidity, light body. Citrus, green apple, white peach, floral, mineral.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Marlborough</strong> (NZ), <strong>Loire</strong> (FR), <strong>Alsace</strong> (FR), <strong>Northern Italy</strong></span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">7–10°C · White wine glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Oysters</span><span class="pairing-pill">Goat cheese</span><span class="pairing-pill">Sushi</span><span class="pairing-pill">Seafood</span></div></div>
+      </div>
+    </div>
+
+    <!-- FULL WHITE -->
+    <div class="card" data-cat="white">
+      <div class="card-header"><span class="card-dot dot-white"></span><span class="card-title">Full-bodied White</span><span class="card-tag">White</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Grapes</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('chardonnay',this)">Chardonnay</span>
+            <span class="grape-pill" onclick="openDrawer('viognier',this)">Viognier</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-chardonnay">
+          <div class="drawer-header"><span class="drawer-title">Chardonnay</span><button class="drawer-close" onclick="closeDrawer('chardonnay')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Full body, medium-high acidity. Heavily influenced by oak and winemaking style.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val"><strong>Unoaked:</strong> lemon, apple, pear, mineral. <strong>Oaked:</strong> butter, vanilla, toast, cream, tropical fruit.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>White Burgundy</strong> (FR) — Chablis (steely), Meursault (rich). <strong>Napa</strong> (US). <strong>Margaret River</strong> (AU). <strong>Okanagan BC</strong>.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">10–13°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Lobster</span><span class="d-pill">Roast chicken</span><span class="d-pill">Cream pasta</span><span class="d-pill">Brie</span><span class="d-pill">Scallops</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-viognier">
+          <div class="drawer-header"><span class="drawer-title">Viognier</span><button class="drawer-close" onclick="closeDrawer('viognier')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Full body, low acidity, very aromatic. Rich and heady. Can feel oily or viscous.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Peach, apricot, honeysuckle, jasmine, orange blossom, ginger. Very floral and perfumed.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Condrieu</strong> (FR — N. Rhône) — benchmark. <strong>Languedoc</strong> (FR). <strong>California</strong>. <strong>BC Okanagan</strong>.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">10–12°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Spiced chicken</span><span class="d-pill">Lobster bisque</span><span class="d-pill">Thai curry</span><span class="d-pill">Soft cheese</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val">Medium–high body. Oak-aged: butter, vanilla, toast. Unoaked: apple, lemon, pineapple.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Burgundy</strong> (FR), <strong>Napa</strong> (US), <strong>Margaret River</strong> (AU), <strong>Rhône</strong> (FR)</span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">10–13°C · White wine glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Lobster</span><span class="pairing-pill">Roast chicken</span><span class="pairing-pill">Cream pasta</span><span class="pairing-pill">Brie</span></div></div>
+      </div>
+    </div>
+
+    <!-- SWEET WHITE -->
+    <div class="card" data-cat="white">
+      <div class="card-header"><span class="card-dot dot-white"></span><span class="card-title">Sweet White</span><span class="card-tag">White</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Grapes</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('riesling-sweet',this)">Riesling (late harvest)</span>
+            <span class="grape-pill" onclick="openDrawer('gewurz',this)">Gewurztraminer</span>
+            <span class="grape-pill" onclick="openDrawer('muscat',this)">Muscat</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-riesling-sweet">
+          <div class="drawer-header"><span class="drawer-title">Riesling (late harvest)</span><button class="drawer-close" onclick="closeDrawer('riesling-sweet')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Sweet to very sweet, very high acidity balances sugar. Extremely age-worthy.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Honey, apricot, peach, petrol (aged), orange marmalade, ginger, slate mineral.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Mosel</strong> (DE) — Auslese/Beerenauslese/TBA. <strong>Alsace</strong> (FR) — SGN. <strong>Ontario</strong> (CA) — Icewine.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">6–8°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Foie gras</span><span class="d-pill">Blue cheese</span><span class="d-pill">Fruit tart</span><span class="d-pill">Spicy Asian</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-gewurz">
+          <div class="drawer-header"><span class="drawer-title">Gewurztraminer</span><button class="drawer-close" onclick="closeDrawer('gewurz')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Full body, low acidity, off-dry to sweet. Very perfumed — one of the most aromatic whites.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Lychee, rose petal, ginger, cinnamon, tropical fruit, Turkish delight. Unmistakable.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Alsace</strong> (FR) — benchmark. <strong>Alto Adige</strong> (IT). <strong>BC Okanagan</strong>. Germany.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">8–10°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Spicy Thai</span><span class="d-pill">Indian curry</span><span class="d-pill">Soft cheese</span><span class="d-pill">Smoked duck</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-muscat">
+          <div class="drawer-header"><span class="drawer-title">Muscat</span><button class="drawer-close" onclick="closeDrawer('muscat')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Dry sparkling (Moscato d'Asti) to very sweet fortified. Always grapey and floral.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Fresh grape, orange blossom, peach, apricot, honey, rose. Most "grapey" smelling wine.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Asti</strong> (IT) — light sparkling. <strong>Beaumes-de-Venise</strong> (FR) — sweet. <strong>Rutherglen</strong> (AU) — rich fortified.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">6–8°C · White wine or dessert glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Fresh fruit</span><span class="d-pill">Panna cotta</span><span class="d-pill">Light desserts</span><span class="d-pill">Aperitif</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val">Noticeable sweetness balanced by acidity. Honey, apricot, peach, lychee, floral.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Alsace</strong> (FR), <strong>Germany</strong>, <strong>Sauternes</strong> (FR), <strong>Ontario</strong> (CA)</span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">6–8°C · White wine glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Foie gras</span><span class="pairing-pill">Blue cheese</span><span class="pairing-pill">Fruit desserts</span><span class="pairing-pill">Spicy Asian</span></div></div>
+      </div>
+    </div>
+
+    <!-- ROSÉ -->
+    <div class="card" data-cat="rose">
+      <div class="card-header"><span class="card-dot dot-rose"></span><span class="card-title">Rosé</span><span class="card-tag">Rosé</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Grapes</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('grenache-rose',this)">Grenache</span>
+            <span class="grape-pill" onclick="openDrawer('syrah-rose',this)">Syrah</span>
+            <span class="grape-pill" onclick="openDrawer('pinot-noir-rose',this)">Pinot Noir</span>
+            <span class="grape-pill" onclick="openDrawer('sangiovese-rose',this)">Sangiovese</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-grenache-rose">
+          <div class="drawer-header"><span class="drawer-title">Grenache Rosé</span><button class="drawer-close" onclick="closeDrawer('grenache-rose')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Pale, dry, delicate. Provence style — light salmon colour, subtle and elegant.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Strawberry, watermelon, peach, rose petal, citrus zest, herbal garrigue.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Provence</strong> (FR) — the world's most famous rosé region.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">8–10°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Grilled fish</span><span class="d-pill">Salads</span><span class="d-pill">Antipasto</span><span class="d-pill">Ratatouille</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-syrah-rose">
+          <div class="drawer-header"><span class="drawer-title">Syrah Rosé</span><button class="drawer-close" onclick="closeDrawer('syrah-rose')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Deeper colour, more body and structure than Grenache. Often used in blends.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Dark berry, violet, pepper, smoked meat. More savoury than fruit-forward styles.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Northern Rhône</strong> (FR), <strong>Languedoc</strong> (FR), blended in Provence.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">10–12°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">BBQ</span><span class="d-pill">Grilled lamb</span><span class="d-pill">Charcuterie</span><span class="d-pill">Spiced dishes</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-pinot-noir-rose">
+          <div class="drawer-header"><span class="drawer-title">Pinot Noir Rosé</span><button class="drawer-close" onclick="closeDrawer('pinot-noir-rose')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Pale, elegant, dry. Used in Champagne rosé blends and still rosé. Very delicate.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Strawberry, red cherry, raspberry, subtle floral, mineral. Fresh and light.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Champagne</strong> (FR) — rosé Champagne. <strong>Burgundy</strong> (FR), <strong>Oregon</strong> (US), <strong>BC</strong>.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">8–10°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Salmon</span><span class="d-pill">Sushi</span><span class="d-pill">Light salads</span><span class="d-pill">Soft cheese</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-sangiovese-rose">
+          <div class="drawer-header"><span class="drawer-title">Sangiovese Rosé</span><button class="drawer-close" onclick="closeDrawer('sangiovese-rose')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Dry, medium-bodied, higher acidity. Italian character — food-friendly and savoury.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Sour cherry, strawberry, tomato leaf, dried herbs. More savory and structured.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Tuscany</strong> (IT) — Rosato di Toscana. <strong>Cerasuolo d'Abruzzo</strong> (IT).</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">10–12°C · White wine glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Pizza</span><span class="d-pill">Pasta salad</span><span class="d-pill">Caprese</span><span class="d-pill">Grilled vegetables</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val">Dry to off-dry. Strawberry, watermelon, citrus, rose petal. Light–medium body, fresh acidity.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Provence</strong> (FR), <strong>Languedoc</strong> (FR), <strong>Spain</strong>, <strong>BC</strong> (CA)</span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">8–12°C · White wine glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Grilled fish</span><span class="pairing-pill">Salads</span><span class="pairing-pill">Light pasta</span><span class="pairing-pill">Antipasto</span></div></div>
+      </div>
+    </div>
+
+    <!-- SPARKLING -->
+    <div class="card" data-cat="sparkling">
+      <div class="card-header"><span class="card-dot dot-sparkling"></span><span class="card-title">Sparkling Wine</span><span class="card-tag">Sparkling</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Styles</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('champagne',this)">Champagne</span>
+            <span class="grape-pill" onclick="openDrawer('prosecco',this)">Prosecco</span>
+            <span class="grape-pill" onclick="openDrawer('cava',this)">Cava</span>
+            <span class="grape-pill" onclick="openDrawer('cremant',this)">Crémant</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-champagne">
+          <div class="drawer-header"><span class="drawer-title">Champagne</span><button class="drawer-close" onclick="closeDrawer('champagne')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Grapes</span><span class="d-val">Chardonnay, Pinot Noir, Meunier. <strong>Blanc de Blancs</strong> = 100% Chard. <strong>Blanc de Noirs</strong> = red grapes only.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Traditional method (secondary fermentation in bottle). High acidity, fine persistent bubbles.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Brioche, toast, lemon, green apple, cream, almond, biscuit.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Sweetness</span><span class="d-val">Brut Nature → Extra Brut → <strong>Brut</strong> (most common) → Extra Dry → Dry → Demi-Sec → Doux</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">6–8°C · Flute or tulip glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Oysters</span><span class="d-pill">Caviar</span><span class="d-pill">Fried chicken</span><span class="d-pill">Brie</span><span class="d-pill">Sushi</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-prosecco">
+          <div class="drawer-header"><span class="drawer-title">Prosecco</span><button class="drawer-close" onclick="closeDrawer('prosecco')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Grape</span><span class="d-val">Glera (min 85%). Tank method (Charmat) — lighter, fruitier, less complex than Champagne.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">White peach, pear, apple, cream, floral, light almond. Fresh and easy-drinking.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Veneto & Friuli</strong> (IT). <strong>Conegliano Valdobbiadene</strong> = superior DOCG.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">6–8°C · Flute or tulip glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Aperitivo</span><span class="d-pill">Prosciutto</span><span class="d-pill">Light pasta</span><span class="d-pill">Fruit desserts</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-cava">
+          <div class="drawer-header"><span class="drawer-title">Cava</span><button class="drawer-close" onclick="closeDrawer('cava')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Grapes</span><span class="d-val">Macabeo, Xarello, Parellada. Traditional method like Champagne. Great value.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Aromas</span><span class="d-val">Lemon, green apple, almond, brioche (aged), herbal. Dry and crisp.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Key regions</span><span class="d-val"><strong>Penedès, Catalonia</strong> (ES). Guarda Superior = aged 18+ months, premium tier.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">6–8°C · Flute or tulip glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Tapas</span><span class="d-pill">Jamón</span><span class="d-pill">Fried seafood</span><span class="d-pill">Manchego</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-cremant">
+          <div class="drawer-header"><span class="drawer-title">Crémant</span><button class="drawer-close" onclick="closeDrawer('cremant')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">French traditional method sparkling made outside Champagne. Excellent quality-to-price.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Regions</span><span class="d-val"><strong>Alsace</strong> — Pinot Blanc. <strong>Loire</strong> — Chenin Blanc. <strong>Burgundy</strong> — Chardonnay, Pinot Noir. <strong>Limoux</strong> — Chardonnay.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">6–8°C · Flute or tulip glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Aperitif</span><span class="d-pill">Smoked salmon</span><span class="d-pill">Soft cheese</span><span class="d-pill">Fruit tarts</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Sweetness</span><span class="row-val">Brut Nature → Extra Brut → Brut → Extra Dry → Dry → Demi-Sec → Doux (driest → sweetest)</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Champagne</strong> (FR), <strong>Veneto</strong> (IT), <strong>Catalonia</strong> (ES)</span></div>
+        <div class="row"><span class="row-label">Serve</span><span class="row-val">6–8°C · Flute or tulip glass</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Oysters</span><span class="pairing-pill">Fried foods</span><span class="pairing-pill">Sushi</span><span class="pairing-pill">Aperitif</span></div></div>
+      </div>
+    </div>
+
+    <!-- FORTIFIED -->
+    <div class="card" data-cat="fortified">
+      <div class="card-header"><span class="card-dot dot-fortified"></span><span class="card-title">Fortified Wine</span><span class="card-tag">Fortified</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Styles</span>
+          <div class="grapes-row">
+            <span class="grape-pill" onclick="openDrawer('port',this)">Port</span>
+            <span class="grape-pill" onclick="openDrawer('sherry',this)">Sherry</span>
+            <span class="grape-pill" onclick="openDrawer('madeira',this)">Madeira</span>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-port">
+          <div class="drawer-header"><span class="drawer-title">Port</span><button class="drawer-close" onclick="closeDrawer('port')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Sweet, fortified red. Brandy added during fermentation to stop it — retains sugar. 19–22% ABV.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Types</span><span class="d-val"><strong>Ruby</strong> — young, fruity. <strong>Tawny</strong> — oak-aged, nutty, caramel. <strong>Vintage</strong> — declared years, age-worthy. <strong>LBV</strong> — Late Bottled Vintage.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Region</span><span class="d-val"><strong>Douro Valley</strong> (PT). Key grapes: Touriga Nacional, Touriga Franca, Tinta Roriz.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">Ruby: 14–16°C · Tawny: 10–12°C · Port glass or small tulip</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Stilton</span><span class="d-pill">Dark chocolate</span><span class="d-pill">Walnuts</span><span class="d-pill">Christmas cake</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-sherry">
+          <div class="drawer-header"><span class="drawer-title">Sherry</span><button class="drawer-close" onclick="closeDrawer('sherry')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Bone dry to very sweet. Made via solera system (blending across vintages). Underrated.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Types</span><span class="d-val"><strong>Fino/Manzanilla</strong> — bone dry, pale, saline. <strong>Amontillado</strong> — nutty, amber. <strong>Oloroso</strong> — rich, dark, dry. <strong>PX</strong> — intensely sweet, raisin syrup.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Region</span><span class="d-val"><strong>Jerez de la Frontera</strong> (ES). Palomino grape for dry; PX grape for sweet.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">Fino: 7–9°C · Oloroso: 12–14°C · Copita glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Tapas (Fino)</span><span class="d-pill">Nuts (Amontillado)</span><span class="d-pill">Ice cream (PX)</span><span class="d-pill">Jamón</span></div></div>
+          </div>
+        </div>
+        <div class="grape-drawer" id="drawer-madeira">
+          <div class="drawer-header"><span class="drawer-title">Madeira</span><button class="drawer-close" onclick="closeDrawer('madeira')">×</button></div>
+          <div class="drawer-body">
+            <div class="d-row"><span class="d-label">Style</span><span class="d-val">Fortified, heated during production. Almost indestructible once opened. Very age-worthy.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Types</span><span class="d-val"><strong>Sercial</strong> — dry, high acidity. <strong>Verdelho</strong> — off-dry, smoky. <strong>Bual</strong> — medium sweet. <strong>Malmsey</strong> — rich & sweet.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Region</span><span class="d-val"><strong>Madeira Island</strong> (PT). Volcanic terroir, high acidity balances sweetness.</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Serve</span><span class="d-val">Dry: 10–12°C · Sweet: 12–14°C · White wine or dessert glass</span></div>
+            <div class="d-divider"></div>
+            <div class="d-row"><span class="d-label">Pairs with</span><div class="d-pills"><span class="d-pill">Soup (Sercial)</span><span class="d-pill">Nuts</span><span class="d-pill">Caramel desserts</span><span class="d-pill">Blue cheese</span></div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-label">Character</span><span class="row-val"><strong>Port:</strong> sweet, rich, dark fruit, 19–22% ABV. <strong>Sherry:</strong> dry to sweet, nutty, oxidised. <strong>Madeira:</strong> high acidity, caramel, smoke.</span></div>
+        <div class="row"><span class="row-label">Regions</span><span class="row-val"><strong>Douro</strong> (PT), <strong>Jerez</strong> (ES), <strong>Madeira Island</strong> (PT)</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Pairs with</span><div class="pairing-row"><span class="pairing-pill">Stilton</span><span class="pairing-pill">Dark chocolate</span><span class="pairing-pill">Nuts</span><span class="pairing-pill">Tapas (Sherry)</span></div></div>
+      </div>
+    </div>
+
+    <!-- REGIONS -->
+    <div class="card" data-cat="region">
+      <div class="card-header"><span class="card-dot dot-region"></span><span class="card-title">France</span><span class="card-tag">Region</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Bordeaux</span><span class="row-val">Cab Sauv & Merlot blends. Left Bank = Cab Sauv dominant. Right Bank = Merlot dominant.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Burgundy</span><span class="row-val">Pinot Noir (red), Chardonnay (white). Terroir-driven. Côte de Nuits vs Côte de Beaune.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Champagne</span><span class="row-val">Chardonnay, Pinot Noir, Meunier. Traditional method. Only "Champagne" if from this region.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Rhône</span><span class="row-val">N. Rhône: Syrah (red), Viognier (white). S. Rhône: Grenache blends, Châteauneuf-du-Pape.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Loire</span><span class="row-val">Sauvignon Blanc (Sancerre, Pouilly-Fumé), Chenin Blanc, Cab Franc (Chinon), Muscadet.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Alsace</span><span class="row-val">Riesling, Gewurztraminer, Pinot Gris. Aromatic, dry to sweet. Labelled by grape, not region.</span></div>
+      </div>
+    </div>
+
+    <div class="card" data-cat="region">
+      <div class="card-header"><span class="card-dot dot-region"></span><span class="card-title">Italy</span><span class="card-tag">Region</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Tuscany</span><span class="row-val">Sangiovese. Chianti, Brunello di Montalcino, Vino Nobile. "Super Tuscans" = Cab/Merlot blends.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Piedmont</span><span class="row-val">Nebbiolo = Barolo & Barbaresco. High tannin, high acidity, age-worthy. Also Barbera, Dolcetto.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Veneto</span><span class="row-val">Prosecco (sparkling), Pinot Grigio, Amarone (dried grape, rich red), Soave (white).</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Sicily</span><span class="row-val">Nero d'Avola (red), Marsala (fortified). Warm climate, ripe fruit styles.</span></div>
+      </div>
+    </div>
+
+    <div class="card" data-cat="region">
+      <div class="card-header"><span class="card-dot dot-region"></span><span class="card-title">Spain</span><span class="card-tag">Region</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Rioja</span><span class="row-val">Tempranillo-based. Oak aging: Crianza → Reserva → Gran Reserva (increasing age).</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Ribera del D.</span><span class="row-val">Tempranillo (Tinto Fino). Bold, structured reds. High altitude = good acidity.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Cava</span><span class="row-val">Traditional method sparkling. Macabeo, Xarello, Parellada grapes. Dry, citrus, almond.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Jerez</span><span class="row-val">Sherry. Fino (dry, pale) → Amontillado → Oloroso → Pedro Ximénez (sweet, dark).</span></div>
+      </div>
+    </div>
+
+    <div class="card" data-cat="region">
+      <div class="card-header"><span class="card-dot dot-region"></span><span class="card-title">New World</span><span class="card-tag">Region</span></div>
+      <div class="card-body">
+        <div class="row"><span class="row-label">Australia</span><span class="row-val"><strong>Barossa:</strong> big Shiraz. <strong>Coonawarra:</strong> Cab Sauv on terra rossa. <strong>Margaret River:</strong> Chardonnay, Cab Sauv. <strong>Clare/Eden:</strong> Riesling.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">New Zealand</span><span class="row-val"><strong>Marlborough:</strong> benchmark Sauvignon Blanc. <strong>Central Otago:</strong> Pinot Noir. <strong>Hawke's Bay:</strong> Cab blends.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">USA</span><span class="row-val"><strong>Napa:</strong> Cab Sauv, full-bodied. <strong>Sonoma:</strong> Chardonnay, Pinot Noir. <strong>Oregon:</strong> Willamette Valley Pinot Noir.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Argentina</span><span class="row-val"><strong>Mendoza:</strong> flagship Malbec — rich, dark fruit, velvety tannins. High altitude (800–1500m) = freshness. Also Bonarda, Torrontés (white).</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Chile</span><span class="row-val"><strong>Maipo:</strong> Cab Sauv. <strong>Colchagua:</strong> Merlot, Carménère (Chile's signature). <strong>Casablanca/San Antonio:</strong> cool-climate Sauvignon Blanc, Pinot Noir.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">South Africa</span><span class="row-val"><strong>Stellenbosch:</strong> Cab Sauv, Chenin Blanc. <strong>Swartland:</strong> Syrah, Chenin. Pinotage = SA signature grape.</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="row-label">Canada (BC)</span><span class="row-val"><strong>Okanagan:</strong> Pinot Gris, Riesling, Merlot, Cab Franc. Short season = aromatic whites & elegant reds.</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>WSET Level 1 reference · Internal use</span>
+    <a href="https://www.everythingwine.ca" target="_blank">everythingwine.ca ↗</a>
+  </footer>
+
+</div>
+
+<script>
+  function filter(cat) {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.toggle('hidden', cat !== 'all' && card.dataset.cat !== cat);
+    });
+    document.querySelectorAll('.grape-drawer').forEach(d => d.classList.remove('open'));
+  }
+
+  function openDrawer(id, pill) {
+    const drawer = document.getElementById('drawer-' + id);
+    if (!drawer) return;
+    const isOpen = drawer.classList.contains('open');
+    document.querySelectorAll('.grape-drawer').forEach(d => d.classList.remove('open'));
+    if (!isOpen) {
+      drawer.classList.add('open');
+      setTimeout(() => drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    }
+  }
+
+  function closeDrawer(id) {
+    const drawer = document.getElementById('drawer-' + id);
+    if (drawer) drawer.classList.remove('open');
+  }
+</script>
+</body>
+</html>
